@@ -1,0 +1,123 @@
+@page "/properties/{id:int}"
+@model CityGuide.Web.Pages.Properties.DetailsModel
+@inject CityClock Clock
+@{
+    var p = Model.Property!;
+    var site = SiteOpt.Value;
+    var images = p.Images.OrderBy(i => i.SortOrder).ToList();
+    var closed = p.Status == ListingStatus.Closed;
+    var place = $"{p.Area?.Name}، {site.CityName}";
+    var wa = Phone.WhatsAppLink(p.AdvertiserPhone,
+        $"السلام عليكم، شفت إعلان {p.Title} في {p.Area?.Name} بسعر {Fmt.Price(p)} على {site.SiteName}. هل لسه متاح؟");
+    ViewData["Title"] = $"{p.Title} في {p.Area?.Name} — {Fmt.Price(p)}";
+    ViewData["Description"] = $"{p.Title}، {place}. السعر {Fmt.Price(p)}. المعلن: {p.AdvertiserType.Ar()}." + (p.Description is null ? "" : " " + p.Description[..Math.Min(140, p.Description.Length)]);
+    ViewData["Nav"] = "properties";
+    if (!closed) ViewData["BodyClass"] = "has-contact-bar";
+    if (images.Count > 0) ViewData["OgImage"] = ImageStore.Url(images[0].FileName);
+}
+<div class="page">
+    <div class="row">
+        <a class="icon-btn" href="/properties@(p.Purpose == ListingPurpose.Rent ? "?purpose=Rent" : "")" aria-label="رجوع للعقارات">@Icons.Svg("back", 22, 2.4)</a>
+        <span class="muted">عقارات @p.Purpose.Ar()</span>
+    </div>
+
+    @if (Model.Message is not null) { <div class="notice notice-ok" role="status">@Model.Message</div> }
+    @if (closed) { <div class="notice notice-err">@p.Purpose.ClosedText() — الإعلان ده مبقاش متاح.</div> }
+
+    <div class="two-col">
+        <div class="stack">
+            @if (images.Count > 0)
+            {
+                <div class="gallery" tabindex="0" aria-label="صور العقار">
+                    @for (var i = 0; i < images.Count; i++)
+                    {
+                        <img src="@ImageStore.Url(images[i].FileName)" alt="صورة @(i + 1) من @images.Count" loading="@(i == 0 ? "eager" : "lazy")" decoding="async">
+                    }
+                </div>
+                @if (images.Count > 1) { <div class="gallery-count">@images.Count صور — اسحب للتنقل</div> }
+            }
+            else
+            {
+                <div class="gallery"><span class="placeholder-img" style="color:#8A8D91">@Icons.Svg("building", 80, 1.3)<span>لا توجد صور</span></span></div>
+            }
+
+            <section class="card pad stack">
+                <div class="price" style="font-size:30px; font-weight:700">@Fmt.Price(p)</div>
+                <h1>@p.Title</h1>
+                <div class="muted">@place · نُشر @Fmt.Ago(p.PublishedAt ?? p.CreatedAt, Clock.UtcNow)</div>
+                <div class="row wrap-row" style="gap:6px">
+                    <span class="badge @(p.AdvertiserType == AdvertiserType.Owner ? "badge-owner" : "badge-broker")">@p.AdvertiserType.Ar()</span>
+                    @if (p.IsVerified) { <span class="badge badge-verified">@Icons.Svg("check", 13, 3.4) موثّق</span> }
+                    @if (p.IsFeatured) { <span class="badge badge-featured">مميز</span> }
+                </div>
+                <div class="facts">
+                    <div class="fact"><div class="k">المساحة</div><div class="v">@p.Size متر</div></div>
+                    @if (p.Rooms is not null) { <div class="fact"><div class="k">الغرف</div><div class="v">@p.Rooms</div></div> }
+                    @if (p.Bathrooms is not null) { <div class="fact"><div class="k">الحمامات</div><div class="v">@p.Bathrooms</div></div> }
+                    @if (p.Floor is not null) { <div class="fact"><div class="k">الدور</div><div class="v">@(p.Floor == 0 ? "أرضي" : p.Floor.ToString())</div></div> }
+                    @if (p.Finishing is not null) { <div class="fact"><div class="k">التشطيب</div><div class="v">@p.Finishing.Value.Ar()</div></div> }
+                    <div class="fact"><div class="k">النوع</div><div class="v">@p.Type.Ar()</div></div>
+                </div>
+            </section>
+
+            @if (p.Description is not null)
+            {
+                <section class="card pad stack">
+                    <h2>وصف العقار</h2>
+                    <p style="white-space:pre-line">@p.Description</p>
+                </section>
+            }
+            @if (p.MapUrl is not null)
+            {
+                <a class="btn" href="@p.MapUrl" target="_blank" rel="noopener">@Icons.Svg("map", 20) فين العقار؟ افتح الخريطة</a>
+            }
+        </div>
+
+        <aside class="stack sticky">
+            <section class="card pad stack">
+                <div class="row">
+                    <span class="avatar">@p.AdvertiserName[..1]</span>
+                    <div>
+                        <div style="font-weight:700">@p.AdvertiserName</div>
+                        <div class="muted small">@p.AdvertiserType.Ar()@(p.IsVerified ? " · تم التأكد من الإعلان" : "")</div>
+                    </div>
+                </div>
+                @if (!closed)
+                {
+                    @if (wa is not null) { <a class="btn btn-call btn-block" href="@wa" target="_blank" rel="noopener">@Icons.Svg("whatsapp", 20) كلمه على واتساب</a> }
+                    <a class="btn btn-wa btn-block" href="@Phone.TelLink(p.AdvertiserPhone)">@Icons.Svg("phone", 20, 2.2) اتصل <span class="ltr">@Phone.Display(p.AdvertiserPhone)</span></a>
+                }
+                <button class="btn btn-block" type="button" data-share data-title="@p.Title — @Fmt.Price(p)">@Icons.Svg("share", 20) مشاركة الإعلان</button>
+            </section>
+            <div class="notice">انتبه: عاين العقار بنفسك وتأكد من الأوراق قبل ما تدفع أي مبلغ.</div>
+            <details class="card pad" open="@(Model.ShowReport ? "open" : null)">
+                <summary style="cursor:pointer; font-weight:700; min-height:44px; display:flex; align-items:center; gap:8px">@Icons.Svg("flag", 20) فيه مشكلة في الإعلان؟ بلّغنا</summary>
+                <form method="post" asp-page-handler="Report" class="stack" style="margin-top:12px">
+                    <label class="field">إيه المشكلة؟
+                        <textarea class="input" name="message" maxlength="500" required placeholder="مثال: العقار اتباع، السعر غلط، المعلن سمسار مش مالك"></textarea>
+                    </label>
+                    <partial name="_Turnstile" />
+                    <button class="btn btn-primary" type="submit">ابعت البلاغ</button>
+                </form>
+            </details>
+        </aside>
+    </div>
+
+    @if (Model.Similar.Count > 0)
+    {
+        <section class="stack" aria-labelledby="similar-title">
+            <div class="section-title"><h2 id="similar-title">عقارات مشابهة</h2></div>
+            <div class="prop-scroll">
+                @foreach (var s in Model.Similar) { <partial name="_PropertyCard" model="s" /> }
+            </div>
+        </section>
+    }
+</div>
+
+@if (!closed)
+{
+    <div class="contact-bar">
+        @if (wa is not null) { <a class="btn btn-call" href="@wa" target="_blank" rel="noopener">@Icons.Svg("whatsapp", 20) واتساب</a> }
+        <a class="btn btn-wa" href="@Phone.TelLink(p.AdvertiserPhone)">@Icons.Svg("phone", 20, 2.2) اتصل</a>
+    </div>
+}

@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E0CE26D3-F963-453B-98E9-A8206C9BEF41}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CityGuide.Web", "src\CityGuide.Web\CityGuide.Web.csproj", "{EF1F245E-A40F-4DA5-A6ED-F1340EE3B8F5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{11DC0BE8-DC91-4C30-87F5-5D97728A58B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CityGuide.Tests", "tests\CityGuide.Tests\CityGuide.Tests.csproj", "{C40DD66F-1B8E-4782-AFE6-8178127487CD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EF1F245E-A40F-4DA5-A6ED-F1340EE3B8F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF1F245E-A40F-4DA5-A6ED-F1340EE3B8F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF1F245E-A40F-4DA5-A6ED-F1340EE3B8F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF1F245E-A40F-4DA5-A6ED-F1340EE3B8F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C40DD66F-1B8E-4782-AFE6-8178127487CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C40DD66F-1B8E-4782-AFE6-8178127487CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C40DD66F-1B8E-4782-AFE6-8178127487CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C40DD66F-1B8E-4782-AFE6-8178127487CD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EF1F245E-A40F-4DA5-A6ED-F1340EE3B8F5} = {E0CE26D3-F963-453B-98E9-A8206C9BEF41}
+		{C40DD66F-1B8E-4782-AFE6-8178127487CD} = {11DC0BE8-DC91-4C30-87F5-5D97728A58B8}
+	EndGlobalSection
+EndGlobal

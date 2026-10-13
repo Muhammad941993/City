@@ -1,0 +1,24 @@
+@page "/about"
+@{
+    ViewData["Title"] = "عن الموقع";
+    var site = SiteOpt.Value;
+    var wa = Phone.WhatsAppLink(site.WhatsApp);
+}
+<div class="page narrow" style="margin:0 auto">
+    <section class="card pad stack">
+        <h1>عن @site.SiteName</h1>
+        <p>موقع واحد بيجمع كل اللي محتاجه أهل @site.CityName: أرقام المحلات والخدمات والطوارئ، والعقارات المعروضة للبيع والإيجار بأسعار حقيقية وإعلانات بنراجعها قبل ما تظهر.</p>
+        <p>كل إعلان عقار مكتوب عليه بوضوح لو المعلن <b>مالك</b> أو <b>سمسار</b>، وعلامة <b>موثّق</b> معناها إننا عاينّا العقار أو شفنا الأوراق.</p>
+    </section>
+    <section class="card pad stack" id="contact">
+        <h2>تواصل معنا</h2>
+        @if (wa is not null)
+        {
+            <a class="btn btn-call" href="@wa" target="_blank" rel="noopener">@Icons.Svg("whatsapp", 20) كلمنا على واتساب</a>
+        }
+        else
+        {
+            <p class="muted">[رقم واتساب الموقع]</p>
+        }
+    </section>
+</div>

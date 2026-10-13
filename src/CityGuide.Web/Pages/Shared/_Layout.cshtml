@@ -1,0 +1,83 @@
+@{
+    var site = SiteOpt.Value;
+    var title = ViewData["Title"] as string;
+    var fullTitle = string.IsNullOrEmpty(title) ? site.SiteName : $"{title} | {site.SiteName}";
+    var description = ViewData["Description"] as string
+        ?? $"{site.SiteName}: أرقام المحلات والخدمات والطوارئ، وعقارات للبيع والإيجار من المالك مباشرة.";
+    var nav = ViewData["Nav"] as string;
+    var baseUrl = string.IsNullOrEmpty(site.BaseUrl) ? $"{Context.Request.Scheme}://{Context.Request.Host}" : site.BaseUrl.TrimEnd('/');
+    var url = baseUrl + Context.Request.Path + Context.Request.QueryString;
+    var ogImage = ViewData["OgImage"] as string;
+    string? Current(string key) => nav == key ? "page" : null;
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>@fullTitle</title>
+    <meta name="description" content="@description">
+    <meta name="theme-color" content="#0B7A83">
+    @if (ViewData["NoIndex"] is true)
+    {
+        <meta name="robots" content="noindex">
+    }
+    <meta property="og:site_name" content="@site.SiteName">
+    <meta property="og:title" content="@(title ?? site.SiteName)">
+    <meta property="og:description" content="@description">
+    <meta property="og:url" content="@url">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ar_EG">
+    @if (ogImage is not null)
+    {
+        <meta property="og:image" content="@(baseUrl + ogImage)">
+        <meta name="twitter:card" content="summary_large_image">
+    }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+    <script>document.documentElement.classList.add('js')</script>
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body class="@ViewData["BodyClass"]">
+<header class="site-header">
+    <div class="wrap">
+        <a class="logo" href="/"><span class="logo-mark">@Icons.Svg("pin", 22, 2.2)</span>@site.SiteName</a>
+        <form class="header-search" action="/search" method="get" role="search">
+            <label class="search-box">
+                @Icons.Svg("search", 20, 2.2)
+                <span class="sr-only">بحث</span>
+                <input type="search" name="q" placeholder="ابحث عن عقار أو رقم…" value="@Context.Request.Query["q"]">
+            </label>
+        </form>
+        <nav class="header-nav" aria-label="القائمة">
+            <a href="/" aria-current="@Current("home")">الرئيسية</a>
+            <a href="/directory" aria-current="@Current("directory")">أرقام وخدمات</a>
+            <a href="/properties" aria-current="@Current("properties")">عقارات</a>
+        </nav>
+        <span class="spacer"></span>
+        <a class="btn btn-primary header-cta" href="/add">@Icons.Svg("plus", 20, 2.4) أضف إعلانك</a>
+        <a class="icon-btn mobile-only" href="/search" aria-label="بحث">@Icons.Svg("search", 22, 2.2)</a>
+    </div>
+</header>
+
+<main class="wrap">
+    @RenderBody()
+</main>
+
+<footer class="site-footer">
+    @site.SiteName · <a href="/about">عن الموقع</a> · <a href="/about#contact">تواصل معنا</a> · <a href="/policy">سياسة النشر</a>
+</footer>
+
+<nav class="bottom-nav" aria-label="التنقل">
+    <a href="/" aria-current="@Current("home")">@Icons.Svg("home", 26)الرئيسية</a>
+    <a href="/directory" aria-current="@Current("directory")">@Icons.Svg("phone", 26)الدليل</a>
+    <a href="/properties" aria-current="@Current("properties")">@Icons.Svg("building", 26)العقارات</a>
+    <a href="/add" class="add-tab" aria-current="@Current("add")"><span class="dot">@Icons.Svg("plus", 22, 2.6)</span>أضف إعلان</a>
+</nav>
+
+<script src="~/js/site.js" asp-append-version="true" defer></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

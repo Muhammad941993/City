@@ -1,0 +1,116 @@
+@page "/properties"
+@model CityGuide.Web.Pages.Properties.IndexModel
+@{
+    var purpose = Model.Purpose ?? ListingPurpose.Sale;
+    var typeName = Model.Type?.Ar();
+    var areaName = Model.Areas.FirstOrDefault(a => a.Id == Model.Area)?.Name;
+    var heading = $"{typeName ?? "عقارات"} {purpose.Ar()}" + (areaName is null ? "" : $" في {areaName}");
+    ViewData["Title"] = heading;
+    ViewData["Description"] = $"{heading} في {SiteOpt.Value.CityName} من المالك مباشرة أو سمسار، بالسعر والمساحة والصور وزر واتساب.";
+    ViewData["Nav"] = "properties";
+}
+<div class="page">
+    <div class="row">
+        <h1 style="flex:1 1 auto">@heading</h1>
+        <a class="btn btn-primary btn-sm" href="/properties/add">@Icons.Svg("plus", 18, 2.4) أضف عقار</a>
+    </div>
+
+    <nav class="tabs card" aria-label="بيع أو إيجار" style="padding:5px">
+        <a href="@Model.Link(("purpose", null))" aria-current="@(purpose == ListingPurpose.Sale ? "true" : null)">للبيع</a>
+        <a href="@Model.Link(("purpose", ListingPurpose.Rent))" aria-current="@(purpose == ListingPurpose.Rent ? "true" : null)">للإيجار</a>
+    </nav>
+
+    <div class="side-col">
+        <div>
+            <button class="btn btn-block filters-toggle" type="button" data-sheet-open="filters" aria-controls="filters" aria-expanded="false">
+                @Icons.Svg("filter", 20) الفلاتر والترتيب
+                @if (Model.Filter.HasAdvancedFilters) { <span class="badge badge-verified">مفعّلة</span> }
+            </button>
+            <form id="filters" class="filters card stack sticky" method="get" aria-label="الفلاتر">
+                <div class="sheet-head">
+                    <h2>دوّر على عقار</h2>
+                    <button class="icon-btn" type="button" data-sheet-close="filters" aria-label="إغلاق">@Icons.Svg("close", 22, 2.4)</button>
+                </div>
+                @if (purpose == ListingPurpose.Rent) { <input type="hidden" name="purpose" value="Rent"> }
+                <label class="field">إيه النوع؟
+                    <select class="input" name="type">
+                        <option value="">كل الأنواع</option>
+                        @foreach (var t in Enum.GetValues<PropertyType>())
+                        {
+                            <option value="@t" selected="@(Model.Type == t)">@t.Ar()</option>
+                        }
+                    </select>
+                </label>
+                <label class="field">فين؟
+                    <select class="input" name="area">
+                        <option value="">كل المناطق</option>
+                        @foreach (var a in Model.Areas)
+                        {
+                            <option value="@a.Id" selected="@(Model.Area == a.Id)">@a.Name</option>
+                        }
+                    </select>
+                </label>
+                <fieldset class="stack" style="border:0; padding:0; margin:0">
+                    <legend class="field" style="margin-bottom:4px">السعر (جنيه)@(purpose == ListingPurpose.Rent ? " — شهرياً" : "")</legend>
+                    <div class="grid-2">
+                        <label><span class="sr-only">من</span><input class="input" name="minPrice" inputmode="numeric" placeholder="من" value="@Model.MinPrice"></label>
+                        <label><span class="sr-only">إلى</span><input class="input" name="maxPrice" inputmode="numeric" placeholder="إلى" value="@Model.MaxPrice"></label>
+                    </div>
+                </fieldset>
+                <fieldset class="stack" style="border:0; padding:0; margin:0">
+                    <legend class="field" style="margin-bottom:4px">المساحة (متر)</legend>
+                    <div class="grid-2">
+                        <label><span class="sr-only">من</span><input class="input" name="minSize" inputmode="numeric" placeholder="من" value="@Model.MinSize"></label>
+                        <label><span class="sr-only">إلى</span><input class="input" name="maxSize" inputmode="numeric" placeholder="إلى" value="@Model.MaxSize"></label>
+                    </div>
+                </fieldset>
+                <label class="field">المعلن
+                    <select class="input" name="advertiser">
+                        <option value="">مالك أو سمسار</option>
+                        <option value="Owner" selected="@(Model.Advertiser == AdvertiserType.Owner)">من المالك فقط</option>
+                        <option value="Broker" selected="@(Model.Advertiser == AdvertiserType.Broker)">سمسار</option>
+                    </select>
+                </label>
+                <label class="field">الترتيب
+                    <select class="input" name="sort">
+                        @foreach (var s in Enum.GetValues<PropertySort>())
+                        {
+                            <option value="@(s == PropertySort.Newest ? "" : s.ToString())" selected="@(Model.Sort == s)">@s.Ar()</option>
+                        }
+                    </select>
+                </label>
+                <button class="btn btn-primary btn-block" type="submit">عرض النتائج</button>
+                @if (Model.Filter.HasAdvancedFilters)
+                {
+                    <a class="btn btn-ghost btn-block" href="/properties@(purpose == ListingPurpose.Rent ? "?purpose=Rent" : "")">امسح الفلاتر</a>
+                }
+            </form>
+            <div class="sheet-backdrop" data-sheet-close="filters"></div>
+        </div>
+
+        <section class="stack" aria-live="polite">
+            <div class="muted">لقينا <b style="color:var(--text)">@Model.Total</b> عقار</div>
+            @if (Model.Results.Count == 0)
+            {
+                <div class="card empty">مفيش عقارات بالمواصفات دي. جرب تغيّر الفلاتر.</div>
+            }
+            else
+            {
+                <div class="prop-list">
+                    @foreach (var p in Model.Results)
+                    {
+                        <partial name="_PropertyCard" model="p" />
+                    }
+                </div>
+            }
+            @if (Model.Pages > 1)
+            {
+                <nav class="pager" aria-label="الصفحات">
+                    @if (Model.PageNumber > 1) { <a class="btn" href="@(Model.Link(("page", Model.PageNumber - 1)))">السابق</a> }
+                    <span class="btn btn-ghost" aria-current="page">@Model.PageNumber / @Model.Pages</span>
+                    @if (Model.PageNumber < Model.Pages) { <a class="btn" href="@(Model.Link(("page", Model.PageNumber + 1)))">التالي</a> }
+                </nav>
+            }
+        </section>
+    </div>
+</div>

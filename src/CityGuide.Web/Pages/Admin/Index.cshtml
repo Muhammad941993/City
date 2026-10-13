@@ -1,0 +1,139 @@
+@page "/admin"
+@model CityGuide.Web.Pages.Admin.IndexModel
+@inject CityClock Clock
+@{
+    ViewData["Title"] = "لوحة التحكم";
+    ViewData["AdminNav"] = "queue";
+    var site = SiteOpt.Value;
+}
+<div class="page">
+    <partial name="_AdminNav" />
+    @if (Model.Flash is not null) { <div class="notice notice-ok" role="status">@Model.Flash</div> }
+
+    <div class="stat-grid">
+        <div class="card stat"><div class="n">@(Model.PendingProperties.Count + Model.PendingPlaces.Count)</div><div class="muted">مستني مراجعة</div></div>
+        <div class="card stat"><div class="n">@Model.PublishedProperties</div><div class="muted">عقار منشور</div></div>
+        <div class="card stat"><div class="n">@Model.PublishedPlaces</div><div class="muted">مكان في الدليل</div></div>
+        <div class="card stat"><div class="n">@Model.ClosedThisMonth</div><div class="muted">اتباع/اتأجر آخر 30 يوم</div></div>
+    </div>
+
+    <section class="card" aria-labelledby="q-props">
+        <div class="pad"><h2 id="q-props">عقارات مستنية مراجعة (@Model.PendingProperties.Count)</h2></div>
+        @if (Model.PendingProperties.Count == 0) { <div class="empty">مفيش حاجة.</div> }
+        @foreach (var p in Model.PendingProperties)
+        {
+            var wa = Phone.WhatsAppLink(p.AdvertiserPhone, $"السلام عليكم يا {p.AdvertiserName}، معاك {site.SiteName} بخصوص إعلان {p.Title} اللي بعته. ممكن نتأكد من شوية تفاصيل؟");
+            <div class="queue-item">
+                <div class="row wrap-row" style="align-items:flex-start">
+                    @if (p.Images.Count > 0)
+                    {
+                        <img src="@ImageStore.ThumbUrl(p.Images.OrderBy(i => i.SortOrder).First().FileName)" alt="" width="120" height="90" style="border-radius:10px; object-fit:cover; width:120px; height:90px">
+                    }
+                    <div style="flex:1 1 220px">
+                        <div style="font-weight:700">@p.Title — @Fmt.Price(p)</div>
+                        <div class="muted small">@p.Area?.Name · @p.Images.Count صور · @Fmt.Ago(p.CreatedAt, Clock.UtcNow)</div>
+                        <div class="small">@p.AdvertiserName · <span class="ltr">@Phone.Display(p.AdvertiserPhone)</span> · <span class="badge @(p.AdvertiserType == AdvertiserType.Owner ? "badge-owner" : "badge-broker")">@p.AdvertiserType.Ar()</span></div>
+                        @if (p.Description is not null) { <p class="small muted" style="margin-top:4px">@p.Description</p> }
+                    </div>
+                </div>
+                <div class="inline-form">
+                    <form method="post" asp-page-handler="ApproveProperty" asp-route-id="@p.Id"><button class="btn btn-primary btn-sm">موافقة ونشر</button></form>
+                    @if (wa is not null) { <a class="btn btn-wa btn-sm" href="@wa" target="_blank" rel="noopener">@Icons.Svg("whatsapp", 18) تواصل</a> }
+                    <a class="btn btn-sm" href="/admin/properties/edit/@p.Id">تعديل</a>
+                    <form method="post" asp-page-handler="RejectProperty" asp-route-id="@p.Id" class="inline-form" style="flex:1 1 260px">
+                        <input class="input" name="reason" placeholder="سبب الرفض" aria-label="سبب الرفض">
+                        <button class="btn btn-danger btn-sm">رفض</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </section>
+
+    <section class="card" aria-labelledby="q-places">
+        <div class="pad"><h2 id="q-places">محلات وتعديلات مستنية مراجعة (@Model.PendingPlaces.Count)</h2></div>
+        @if (Model.PendingPlaces.Count == 0) { <div class="empty">مفيش حاجة.</div> }
+        @foreach (var p in Model.PendingPlaces)
+        {
+            var original = p.EditOfPlaceId is { } oid ? Model.Originals.GetValueOrDefault(oid) : null;
+            var wa = Phone.WhatsAppLink(p.SubmitterPhone);
+            <div class="queue-item">
+                <div>
+                    <div class="row wrap-row">
+                        <b>@p.Name</b>
+                        @if (p.EditOfPlaceId is not null) { <span class="badge badge-broker">اقتراح تعديل</span> }
+                        <span class="muted small">@p.Category?.Name · @p.Area?.Name · @Fmt.Ago(p.CreatedAt, Clock.UtcNow)</span>
+                    </div>
+                    <div class="small">تليفون: <span class="ltr">@Phone.Display(p.Phone)</span>@(p.WhatsApp is null ? "" : $" · واتساب: {Phone.Display(p.WhatsApp)}") · @(OpeningHours.Describe(p) ?? "بدون مواعيد")</div>
+                    @if (p.Description is not null) { <div class="small muted">@p.Description</div> }
+                    @if (original is not null)
+                    {
+                        <div class="small notice" style="margin-top:6px">
+                            البيانات الحالية: @original.Name · <span class="ltr">@Phone.Display(original.Phone)</span> · @original.Category?.Name · @original.Area?.Name · @(OpeningHours.Describe(original) ?? "بدون مواعيد")
+                        </div>
+                    }
+                    @if (p.SubmitterName is not null || p.SubmitterPhone is not null)
+                    {
+                        <div class="small muted">مقدّم من: @p.SubmitterName <span class="ltr">@Phone.Display(p.SubmitterPhone)</span></div>
+                    }
+                </div>
+                <div class="inline-form">
+                    <form method="post" asp-page-handler="ApprovePlace" asp-route-id="@p.Id"><button class="btn btn-primary btn-sm">@(p.EditOfPlaceId is null ? "موافقة ونشر" : "اعتماد التعديل")</button></form>
+                    @if (wa is not null) { <a class="btn btn-wa btn-sm" href="@wa" target="_blank" rel="noopener">@Icons.Svg("whatsapp", 18) تواصل</a> }
+                    <a class="btn btn-sm" href="/admin/places/edit/@p.Id">تعديل</a>
+                    <form method="post" asp-page-handler="RejectPlace" asp-route-id="@p.Id" class="inline-form" style="flex:1 1 260px">
+                        <input class="input" name="reason" placeholder="سبب الرفض" aria-label="سبب الرفض">
+                        <button class="btn btn-danger btn-sm">رفض</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </section>
+
+    <section class="card" aria-labelledby="q-exp">
+        <div class="pad stack" style="gap:4px">
+            <h2 id="q-exp">إعلانات هتخلص خلال 3 أيام (@Model.Expiring.Count)</h2>
+            <p class="muted small">ابعت تذكير للمعلن يجدد أو يقولك إنه اتباع.</p>
+        </div>
+        @if (Model.Expiring.Count == 0) { <div class="empty">مفيش حاجة.</div> }
+        @foreach (var p in Model.Expiring)
+        {
+            var wa = Phone.WhatsAppLink(p.AdvertiserPhone,
+                $"السلام عليكم يا {p.AdvertiserName}، إعلان {p.Title} على {site.SiteName} هيخلص يوم {Fmt.Date(Clock.ToLocal(p.ExpiresAt!.Value))}. تحب نجدده ولا العقار اتباع/اتأجر؟");
+            <div class="queue-item">
+                <div><b>@p.Title</b> — @Fmt.Price(p) <span class="muted small">· بينتهي @Fmt.Date(Clock.ToLocal(p.ExpiresAt!.Value))</span></div>
+                <div class="inline-form">
+                    @if (wa is not null) { <a class="btn btn-wa btn-sm" href="@wa" target="_blank" rel="noopener">@Icons.Svg("whatsapp", 18) ابعت تذكير</a> }
+                    <form method="post" asp-page-handler="RenewProperty" asp-route-id="@p.Id"><button class="btn btn-primary btn-sm">تجديد 30 يوم</button></form>
+                    <form method="post" asp-page-handler="CloseProperty" asp-route-id="@p.Id"><button class="btn btn-sm">@p.Purpose.ClosedText()</button></form>
+                </div>
+            </div>
+        }
+    </section>
+
+    <section class="card" aria-labelledby="q-rep">
+        <div class="pad"><h2 id="q-rep">بلاغات الزوار (@Model.Reports.Count)</h2></div>
+        @if (Model.Reports.Count == 0) { <div class="empty">مفيش بلاغات.</div> }
+        @foreach (var r in Model.Reports)
+        {
+            <div class="queue-item">
+                <div>
+                    @if (r.Place is not null) { <a href="/admin/places/edit/@r.PlaceId"><b>@r.Place.Name</b></a> }
+                    else if (r.Property is not null) { <a href="/admin/properties/edit/@r.PropertyId"><b>@r.Property.Title</b></a> }
+                    <span class="muted small">· @Fmt.Ago(r.CreatedAt, Clock.UtcNow)</span>
+                    <div>@r.Message</div>
+                </div>
+                <form method="post" asp-page-handler="ResolveReport" asp-route-id="@r.Id"><button class="btn btn-sm">تم الحل</button></form>
+            </div>
+        }
+    </section>
+
+    @if (Model.TopCategories.Count > 0)
+    {
+        <section class="card pad stack">
+            <h2>أكبر التصنيفات في الدليل</h2>
+            <table class="list"><tbody>
+                @foreach (var (name, count) in Model.TopCategories) { <tr><td>@name</td><td>@count</td></tr> }
+            </tbody></table>
+        </section>
+    }
+</div>

@@ -1,0 +1,6 @@
+@inject Turnstile Captcha
+@if (Captcha.Options.Enabled)
+{
+    <div class="cf-turnstile" data-sitekey="@Captcha.Options.SiteKey" data-language="ar"></div>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+}

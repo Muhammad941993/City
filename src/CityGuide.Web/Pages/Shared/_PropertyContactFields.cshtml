@@ -1,0 +1,21 @@
+@model PropertyFormVm
+<label class="field">اسمك إيه؟
+    <input class="input" asp-for="Input.AdvertiserName" autocomplete="name" required>
+    <span asp-validation-for="Input.AdvertiserName"></span>
+</label>
+<label class="field">رقم موبايلك (واتساب)
+    <input class="input ltr" asp-for="Input.AdvertiserPhone" inputmode="tel" autocomplete="tel" placeholder="01xxxxxxxxx" required>
+    <span asp-validation-for="Input.AdvertiserPhone"></span>
+</label>
+<fieldset class="choices">
+    <legend>إنت مين؟</legend>
+    @foreach (var v in Enum.GetValues<AdvertiserType>())
+    {
+        <label class="choice"><input type="radio" name="Input.AdvertiserType" value="@v" checked="@(Model.Input.AdvertiserType == v)" required><span>@(v == AdvertiserType.Owner ? "مالك العقار" : "سمسار")</span></label>
+    }
+</fieldset>
+<span asp-validation-for="Input.AdvertiserType"></span>
+<label class="field">لينك الخريطة <span class="hint">(اختياري — من جوجل ماب)</span>
+    <input class="input ltr" asp-for="Input.MapUrl" type="url" placeholder="https://maps.app.goo.gl/…">
+    <span asp-validation-for="Input.MapUrl"></span>
+</label>

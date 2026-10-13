@@ -1,0 +1,38 @@
+@model Place
+@inject CityClock Clock
+@{
+    var state = OpeningHours.StateAt(Model, Clock.LocalNow);
+    var hours = OpeningHours.Describe(Model);
+    var wa = Phone.WhatsAppLink(Model.WhatsApp ?? Model.Phone);
+    var tone = Icons.Tone(Model.Category?.Parent?.Icon ?? Model.Category?.Icon ?? "store");
+    var img = Model.Images.OrderBy(i => i.SortOrder).FirstOrDefault();
+    var url = $"/places/{Model.Id}";
+}
+<article class="card place-card">
+    <a class="place-head" href="@url">
+        <span class="avatar" style="background:@tone.Bg; color:@tone.Fg">
+            @if (img is not null) { <img src="@ImageStore.ThumbUrl(img.FileName)" alt="" loading="lazy" width="48" height="48"> }
+            else { @Model.Name[..1] }
+        </span>
+        <span style="flex:1 1 auto; min-width:0">
+            <span class="place-name">@Model.Name
+                @if (Model.IsVerified) { <span class="badge badge-verified">@Icons.Svg("check", 13, 3.4) موثّق</span> }
+            </span>
+            <span class="muted small">@Model.Category?.Name · @Model.Area?.Name</span>
+        </span>
+    </a>
+    <div class="row" style="justify-content:space-between; flex-wrap:wrap">
+        <span class="phone-big">@Phone.Display(Model.Phone)</span>
+        @if (state == OpenState.Open) { <span class="open">مفتوح دلوقتي</span> }
+        else if (state == OpenState.Closed) { <span class="closed">مقفول دلوقتي</span> }
+        else if (hours is not null) { <span class="muted small">@hours</span> }
+    </div>
+    <div class="actions">
+        <a class="btn btn-call" href="@Phone.TelLink(Model.Phone)">@Icons.Svg("phone", 20, 2.2) اتصل</a>
+        @if (wa is not null)
+        {
+            <a class="btn btn-wa" href="@wa" target="_blank" rel="noopener">@Icons.Svg("whatsapp", 20) واتساب</a>
+        }
+        <a class="btn" href="@url">التفاصيل</a>
+    </div>
+</article>

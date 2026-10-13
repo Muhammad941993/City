@@ -1,0 +1,82 @@
+@page "/admin/taxonomy"
+@model CityGuide.Web.Pages.Admin.TaxonomyModel
+@{
+    ViewData["Title"] = "التصنيفات والمناطق";
+    ViewData["AdminNav"] = "taxonomy";
+    var tops = Model.Categories.Where(c => c.ParentId == null).ToList();
+}
+<div class="page">
+    <partial name="_AdminNav" />
+    @if (Model.Flash is not null) { <div class="notice @(Model.Flash.StartsWith("⚠") ? "notice-err" : "notice-ok")" role="status">@Model.Flash</div> }
+
+    <div class="two-col">
+        <section class="card pad stack">
+            <h2>تصنيفات الدليل</h2>
+            @foreach (var c in tops)
+            {
+                <div class="stack" style="gap:6px; border-bottom:1px solid var(--line); padding-bottom:12px">
+                    <form method="post" asp-page-handler="UpdateCategory" asp-route-id="@c.Id" class="inline-form">
+                        <span class="cat-icon" style="width:44px; height:44px; background:@Icons.Tone(c.Icon).Bg; color:@Icons.Tone(c.Icon).Fg">@Icons.Svg(c.Icon, 22)</span>
+                        <input class="input" name="name" value="@c.Name" aria-label="الاسم">
+                        <select class="input" name="icon" aria-label="الأيقونة" style="flex:0 1 120px">
+                            @foreach (var k in TaxonomyModel.IconKeys) { <option value="@k" selected="@(c.Icon == k)">@k</option> }
+                        </select>
+                        <input class="input" name="sortOrder" type="number" value="@c.SortOrder" aria-label="الترتيب" style="flex:0 1 80px">
+                        <button class="btn btn-sm">حفظ</button>
+                        <span class="muted small ltr">/directory/@c.Slug</span>
+                    </form>
+                    @foreach (var s in Model.Categories.Where(x => x.ParentId == c.Id))
+                    {
+                        <div class="inline-form" style="padding-inline-start:32px">
+                            <form method="post" asp-page-handler="UpdateCategory" asp-route-id="@s.Id" class="inline-form" style="flex:1 1 auto">
+                                <input class="input" name="name" value="@s.Name" aria-label="الاسم">
+                                <input class="input" name="sortOrder" type="number" value="@s.SortOrder" aria-label="الترتيب" style="flex:0 1 80px">
+                                <button class="btn btn-sm">حفظ</button>
+                            </form>
+                            @if (!Model.UsedCategories.Contains(s.Id))
+                            {
+                                <form method="post" asp-page-handler="DeleteCategory" asp-route-id="@s.Id"><button class="btn btn-danger btn-sm">حذف</button></form>
+                            }
+                        </div>
+                    }
+                    <form method="post" asp-page-handler="AddCategory" class="inline-form" style="padding-inline-start:32px">
+                        <input type="hidden" name="parentId" value="@c.Id">
+                        <input class="input" name="name" placeholder="تصنيف فرعي جديد" aria-label="تصنيف فرعي جديد" required>
+                        <button class="btn btn-sm">إضافة</button>
+                    </form>
+                </div>
+            }
+            <h3>تصنيف رئيسي جديد</h3>
+            <form method="post" asp-page-handler="AddCategory" class="inline-form">
+                <input class="input" name="name" placeholder="الاسم" aria-label="الاسم" required>
+                <input class="input ltr" name="slug" placeholder="pets" aria-label="الرابط بالإنجليزي" required pattern="[a-z0-9\-]{2,60}">
+                <select class="input" name="icon" aria-label="الأيقونة" style="flex:0 1 120px">
+                    @foreach (var k in TaxonomyModel.IconKeys) { <option value="@k">@k</option> }
+                </select>
+                <button class="btn btn-primary btn-sm">إضافة</button>
+            </form>
+        </section>
+
+        <section class="card pad stack">
+            <h2>المناطق والأحياء</h2>
+            @foreach (var a in Model.Areas)
+            {
+                <div class="inline-form">
+                    <form method="post" asp-page-handler="UpdateArea" asp-route-id="@a.Id" class="inline-form" style="flex:1 1 auto">
+                        <input class="input" name="name" value="@a.Name" aria-label="الاسم">
+                        <input class="input" name="sortOrder" type="number" value="@a.SortOrder" aria-label="الترتيب" style="flex:0 1 70px">
+                        <button class="btn btn-sm">حفظ</button>
+                    </form>
+                    @if (!Model.UsedAreas.Contains(a.Id))
+                    {
+                        <form method="post" asp-page-handler="DeleteArea" asp-route-id="@a.Id"><button class="btn btn-danger btn-sm">حذف</button></form>
+                    }
+                </div>
+            }
+            <form method="post" asp-page-handler="AddArea" class="inline-form">
+                <input class="input" name="name" placeholder="منطقة جديدة" aria-label="منطقة جديدة" required>
+                <button class="btn btn-primary btn-sm">إضافة</button>
+            </form>
+        </section>
+    </div>
+</div>

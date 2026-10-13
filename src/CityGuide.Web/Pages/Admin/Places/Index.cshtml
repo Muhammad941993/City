@@ -1,0 +1,45 @@
+@page "/admin/places"
+@model CityGuide.Web.Pages.Admin.Places.IndexModel
+@inject CityClock Clock
+@{
+    ViewData["Title"] = "إدارة المحلات والخدمات";
+    ViewData["AdminNav"] = "places";
+}
+<div class="page">
+    <partial name="_AdminNav" />
+    <div class="row wrap-row">
+        <h1 style="flex:1 1 auto">المحلات والخدمات</h1>
+        <a class="btn btn-primary" href="/admin/places/edit">@Icons.Svg("plus", 20, 2.4) إضافة مكان</a>
+    </div>
+    <form method="get" class="card pad inline-form">
+        <input class="input" name="q" value="@Model.Q" placeholder="الاسم أو الرقم" aria-label="بحث">
+        <select class="input" name="category" aria-label="التصنيف">
+            <option value="">كل التصنيفات</option>
+            @foreach (var c in Model.Categories) { <option value="@c.Id" selected="@(Model.Category == c.Id)">@c.Name</option> }
+        </select>
+        <select class="input" name="status" aria-label="الحالة">
+            <option value="">كل الحالات</option>
+            @foreach (var s in new[] { ListingStatus.Pending, ListingStatus.Published, ListingStatus.Rejected }) { <option value="@s" selected="@(Model.Status == s)">@s.Ar()</option> }
+        </select>
+        <button class="btn btn-sm" type="submit">بحث</button>
+    </form>
+    <div class="card table-wrap">
+        <table class="list">
+            <thead><tr><th>الاسم</th><th>التصنيف</th><th>الرقم</th><th>الحالة</th><th>آخر تحديث</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var p in Model.Items)
+            {
+                <tr>
+                    <td>@p.Name<div class="muted small">@p.Area?.Name</div></td>
+                    <td>@p.Category?.Name</td>
+                    <td class="ltr">@Phone.Display(p.Phone)</td>
+                    <td>@p.Status.Ar()@(p.IsVerified ? " · موثّق" : "")</td>
+                    <td>@Fmt.Date(Clock.ToLocal(p.UpdatedAt))</td>
+                    <td><a class="btn btn-sm" href="/admin/places/edit/@p.Id">إدارة</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        @if (Model.Items.Count == 0) { <div class="empty">مفيش نتائج.</div> }
+    </div>
+</div>

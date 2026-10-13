@@ -1,0 +1,67 @@
+@model PropertyFormVm
+@{
+    var i = Model.Input;
+}
+<fieldset class="choices">
+    <legend>عايز تبيع ولا تأجّر؟</legend>
+    @foreach (var v in Enum.GetValues<ListingPurpose>())
+    {
+        <label class="choice"><input type="radio" name="Input.Purpose" value="@v" checked="@(i.Purpose == v)" required><span>@(v == ListingPurpose.Sale ? "بيع" : "إيجار")</span></label>
+    }
+</fieldset>
+<span asp-validation-for="Input.Purpose"></span>
+
+<fieldset class="choices">
+    <legend>إيه نوع العقار؟</legend>
+    @foreach (var v in Enum.GetValues<PropertyType>())
+    {
+        <label class="choice"><input type="radio" name="Input.Type" value="@v" checked="@(i.Type == v)" required data-property-type><span>@v.Ar()</span></label>
+    }
+</fieldset>
+<span asp-validation-for="Input.Type"></span>
+
+<label class="field">فين؟
+    <select class="input" asp-for="Input.AreaId" required>
+        <option value="">اختار المنطقة</option>
+        @foreach (var a in Model.Areas)
+        {
+            <option value="@a.Id">@a.Name</option>
+        }
+    </select>
+    <span asp-validation-for="Input.AreaId"></span>
+</label>
+<div class="grid-2">
+    <label class="field">السعر (بالجنيه) <span class="hint">للإيجار: الإيجار الشهري</span>
+        <input class="input" asp-for="Input.Price" type="number" min="1" step="1" inputmode="numeric" placeholder="مثال: 1450000" required>
+        <span asp-validation-for="Input.Price"></span>
+    </label>
+    <label class="field">المساحة (متر)
+        <input class="input" asp-for="Input.Size" type="number" min="1" inputmode="numeric" placeholder="مثال: 140" required>
+        <span asp-validation-for="Input.Size"></span>
+    </label>
+</div>
+<div class="grid-2" data-home-only>
+    <label class="field">عدد الغرف
+        <input class="input" asp-for="Input.Rooms" type="number" min="0" max="50" inputmode="numeric">
+    </label>
+    <label class="field">عدد الحمامات
+        <input class="input" asp-for="Input.Bathrooms" type="number" min="0" max="20" inputmode="numeric">
+    </label>
+</div>
+<div class="grid-2" data-not-land>
+    <label class="field">الدور <span class="hint">(0 = أرضي)</span>
+        <input class="input" asp-for="Input.Floor" type="number" min="-2" max="100" inputmode="numeric">
+    </label>
+    <label class="field">التشطيب
+        <select class="input" asp-for="Input.Finishing">
+            <option value="">—</option>
+            @foreach (var f in Enum.GetValues<FinishingType>())
+            {
+                <option value="@f">@f.Ar()</option>
+            }
+        </select>
+    </label>
+</div>
+<label class="field">وصف العقار <span class="hint">(الدور، التشطيب، القرب من المدارس والمواصلات…)</span>
+    <textarea class="input" asp-for="Input.Description" maxlength="2000"></textarea>
+</label>

@@ -1,0 +1,87 @@
+@model PlaceFormVm
+@{
+    var days = new[] { DayOfWeek.Saturday, DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday };
+}
+<label class="field">اسم المكان
+    <input class="input" asp-for="Input.Name" placeholder="مثال: صيدلية النور">
+    <span asp-validation-for="Input.Name"></span>
+</label>
+<label class="field">التصنيف
+    <select class="input" asp-for="Input.CategoryId">
+        <option value="">اختار…</option>
+        @foreach (var c in Model.Categories.Where(c => c.ParentId == null).OrderBy(c => c.SortOrder))
+        {
+            <optgroup label="@c.Name">
+                <option value="@c.Id" selected="@(Model.Input.CategoryId == c.Id)">@c.Name (عام)</option>
+                @foreach (var s in Model.Categories.Where(s => s.ParentId == c.Id).OrderBy(s => s.SortOrder))
+                {
+                    <option value="@s.Id" selected="@(Model.Input.CategoryId == s.Id)">@s.Name</option>
+                }
+            </optgroup>
+        }
+    </select>
+    <span asp-validation-for="Input.CategoryId"></span>
+</label>
+<label class="field">المنطقة
+    <select class="input" asp-for="Input.AreaId">
+        <option value="">اختار المنطقة…</option>
+        @foreach (var a in Model.Areas)
+        {
+            <option value="@a.Id" selected="@(Model.Input.AreaId == a.Id)">@a.Name</option>
+        }
+    </select>
+    <span asp-validation-for="Input.AreaId"></span>
+</label>
+<div class="grid-2">
+    <label class="field">رقم التليفون
+        <input class="input ltr" asp-for="Input.Phone" inputmode="tel" placeholder="01xxxxxxxxx">
+        <span asp-validation-for="Input.Phone"></span>
+    </label>
+    <label class="field">رقم واتساب <span class="hint">(لو مختلف)</span>
+        <input class="input ltr" asp-for="Input.WhatsApp" inputmode="tel" placeholder="01xxxxxxxxx">
+        <span asp-validation-for="Input.WhatsApp"></span>
+    </label>
+</div>
+<label class="field">العنوان <span class="hint">(اختياري)</span>
+    <input class="input" asp-for="Input.Address" placeholder="الشارع، بجوار…">
+</label>
+<label class="field">لينك الخريطة <span class="hint">(اختياري — من جوجل ماب)</span>
+    <input class="input ltr" asp-for="Input.MapUrl" type="url" placeholder="https://maps.app.goo.gl/…">
+    <span asp-validation-for="Input.MapUrl"></span>
+</label>
+<label class="field">وصف قصير <span class="hint">(الخدمات اللي بتقدمها)</span>
+    <textarea class="input" asp-for="Input.Description" maxlength="1000"></textarea>
+</label>
+<fieldset class="stack" style="border:0; padding:0; margin:0">
+    <legend style="font-weight:700; margin-bottom:6px">مواعيد العمل</legend>
+    <label class="check"><input type="checkbox" asp-for="Input.Is24Hours"> مفتوح 24 ساعة</label>
+    <div class="grid-2">
+        <label class="field">بيفتح الساعة
+            <input class="input" asp-for="Input.OpensAt" type="time">
+            <span asp-validation-for="Input.OpensAt"></span>
+        </label>
+        <label class="field">بيقفل الساعة
+            <input class="input" asp-for="Input.ClosesAt" type="time">
+        </label>
+    </div>
+    <label class="field">يوم الإجازة
+        <select class="input" asp-for="Input.WeeklyDayOff">
+            <option value="">مفيش إجازة</option>
+            @foreach (var d in days)
+            {
+                <option value="@d" selected="@(Model.Input.WeeklyDayOff == d)">@OpeningHours.DayName(d)</option>
+            }
+        </select>
+    </label>
+</fieldset>
+@if (Model.ShowSubmitter)
+{
+    <div class="grid-2">
+        <label class="field">اسمك <span class="hint">(اختياري)</span>
+            <input class="input" asp-for="Input.SubmitterName">
+        </label>
+        <label class="field">رقمك للتواصل <span class="hint">(مش هيظهر)</span>
+            <input class="input ltr" asp-for="Input.SubmitterPhone" inputmode="tel">
+        </label>
+    </div>
+}

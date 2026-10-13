@@ -1,0 +1,61 @@
+@page
+@model IndexModel
+@{
+    ViewData["Nav"] = "home";
+}
+<div class="page">
+    <h1 class="sr-only">@SiteOpt.Value.SiteName</h1>
+
+    <form action="/search" method="get" role="search">
+        <label class="search-box search-lg">
+            @Icons.Svg("search", 22, 2.2)
+            <span class="sr-only">بحث</span>
+            <input type="search" name="q" placeholder="دوّر على رقم، محل، أو عقار…" autocomplete="off">
+            <button class="btn btn-primary btn-sm" type="submit">بحث</button>
+        </label>
+    </form>
+
+    <section class="card pad stack" aria-labelledby="cats-title">
+        <div class="section-title" style="padding:0">
+            <h2 id="cats-title">أرقام وخدمات</h2>
+            <a href="/directory" class="small">كل التصنيفات</a>
+        </div>
+        <div class="cat-grid">
+            @foreach (var c in Model.Categories)
+            {
+                var tone = Icons.Tone(c.Icon);
+                <a class="cat-tile" href="/directory/@c.Slug">
+                    <span class="cat-icon" style="background:@tone.Bg; color:@tone.Fg">@Icons.Svg(c.Icon, 28)</span>
+                    @c.Name
+                </a>
+            }
+        </div>
+    </section>
+
+    <div class="actions">
+        <a class="btn btn-primary" href="/properties/add">@Icons.Svg("building", 20) أضف عقارك</a>
+        <a class="btn" href="/places/add">@Icons.Svg("store", 20) أضف محلك</a>
+    </div>
+
+    <section class="stack" aria-labelledby="latest-title">
+        <div class="section-title">
+            <h2 id="latest-title">أحدث العقارات</h2>
+            <a href="/properties" class="small">شوف الكل</a>
+        </div>
+        @if (Model.Latest.Count == 0)
+        {
+            <div class="card empty">لسه مفيش عقارات منشورة. <a href="/properties/add">أضف أول إعلان</a></div>
+        }
+        else
+        {
+            <div class="prop-scroll">
+                @foreach (var p in Model.Latest)
+                {
+                    <partial name="_PropertyCard" model="p" />
+                }
+            </div>
+        }
+    </section>
+
+    <partial name="_Emergency" model="Model.Emergency" />
+</div>

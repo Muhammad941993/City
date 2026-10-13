@@ -1,0 +1,43 @@
+@model Property
+@inject CityClock Clock
+@{
+    var img = Model.Images.OrderBy(i => i.SortOrder).FirstOrDefault();
+    var url = $"/properties/{Model.Id}";
+    var closed = Model.Status == ListingStatus.Closed;
+    var wa = Phone.WhatsAppLink(Model.AdvertiserPhone, $"السلام عليكم، بخصوص إعلان {Model.Title} على {SiteOpt.Value.SiteName}");
+}
+<article class="card prop-card">
+    <a class="media" href="@url" tabindex="-1" aria-hidden="true">
+        @if (img is not null)
+        {
+            <img src="@ImageStore.ThumbUrl(img.FileName)" alt="" loading="lazy" decoding="async" width="480" height="360">
+        }
+        else
+        {
+            <span class="placeholder-img">@Icons.Svg("building", 56, 1.3)<span>لا توجد صور</span></span>
+        }
+        <span class="badges">
+            @if (closed) { <span class="badge badge-closed">@Model.Purpose.ClosedText()</span> }
+            @if (Model.IsFeatured && !closed) { <span class="badge badge-featured">مميز</span> }
+        </span>
+    </a>
+    <a class="body" href="@url">
+        <span class="price">@Fmt.Price(Model)</span>
+        <span>@Model.Title</span>
+        <span class="muted small">@Model.Area?.Name · @Fmt.Ago(Model.PublishedAt ?? Model.CreatedAt, Clock.UtcNow)</span>
+        <span class="row wrap-row" style="gap:6px; margin-top:4px">
+            <span class="badge @(Model.AdvertiserType == AdvertiserType.Owner ? "badge-owner" : "badge-broker")">@Model.AdvertiserType.Ar()</span>
+            @if (Model.IsVerified) { <span class="badge badge-verified">@Icons.Svg("check", 13, 3.4) موثّق</span> }
+        </span>
+    </a>
+    @if (!closed)
+    {
+        <div class="actions">
+            <a class="btn btn-call btn-sm" href="@Phone.TelLink(Model.AdvertiserPhone)">@Icons.Svg("phone", 18, 2.2) اتصل</a>
+            @if (wa is not null)
+            {
+                <a class="btn btn-wa btn-sm" href="@wa" target="_blank" rel="noopener">@Icons.Svg("whatsapp", 18) واتساب</a>
+            }
+        </div>
+    }
+</article>

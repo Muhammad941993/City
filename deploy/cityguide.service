@@ -1,0 +1,18 @@
+# /etc/systemd/system/cityguide.service
+[Unit]
+Description=City Guide website
+After=network.target postgresql.service
+
+[Service]
+WorkingDirectory=/opt/cityguide/app
+ExecStart=/usr/bin/dotnet /opt/cityguide/app/CityGuide.Web.dll
+Restart=always
+RestartSec=5
+User=cityguide
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5000
+# Secrets and site settings live here (see deploy/cityguide.env.example).
+EnvironmentFile=/opt/cityguide/cityguide.env
+
+[Install]
+WantedBy=multi-user.target

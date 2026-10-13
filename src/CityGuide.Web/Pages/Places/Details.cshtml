@@ -1,0 +1,76 @@
+@page "/places/{id:int}"
+@model CityGuide.Web.Pages.Places.DetailsModel
+@inject CityClock Clock
+@{
+    var p = Model.Place!;
+    var state = OpeningHours.StateAt(p, Clock.LocalNow);
+    var hours = OpeningHours.Describe(p);
+    var wa = Phone.WhatsAppLink(p.WhatsApp ?? p.Phone, $"السلام عليكم، وصلت لرقمكم من {SiteOpt.Value.SiteName}");
+    var images = p.Images.OrderBy(i => i.SortOrder).ToList();
+    ViewData["Title"] = $"{p.Name} — {p.Category?.Name}";
+    ViewData["Description"] = $"{p.Name}، {p.Category?.Name} في {p.Area?.Name}. رقم التليفون {p.Phone}." + (p.Description is null ? "" : " " + p.Description);
+    ViewData["Nav"] = "directory";
+    ViewData["BodyClass"] = "has-contact-bar";
+    if (images.Count > 0) ViewData["OgImage"] = ImageStore.Url(images[0].FileName);
+}
+<div class="page narrow" style="margin:0 auto">
+    <div class="row">
+        <a class="icon-btn" href="/directory/@(p.Category?.Parent?.Slug ?? p.Category?.Slug)" aria-label="رجوع">@Icons.Svg("back", 22, 2.4)</a>
+        <span class="muted">@p.Category?.Parent?.Name @(p.Category?.Parent is null ? "" : "·") @p.Category?.Name</span>
+    </div>
+
+    @if (Model.Message is not null) { <div class="notice notice-ok" role="status">@Model.Message</div> }
+
+    <section class="card pad stack">
+        <h1 class="place-name" style="font-size:26px">@p.Name
+            @if (p.IsVerified) { <span class="badge badge-verified">@Icons.Svg("check", 13, 3.4) موثّق</span> }
+        </h1>
+        <div class="muted">@p.Area?.Name@(p.Address is null ? "" : "، " + p.Address)</div>
+        @if (p.Description is not null) { <p>@p.Description</p> }
+        <div class="phone-big" style="font-size:28px">@Phone.Display(p.Phone)</div>
+        <div class="actions">
+            <a class="btn btn-call" href="@Phone.TelLink(p.Phone)">@Icons.Svg("phone", 20, 2.2) اتصل</a>
+            @if (wa is not null) { <a class="btn btn-wa" href="@wa" target="_blank" rel="noopener">@Icons.Svg("whatsapp", 20) واتساب</a> }
+        </div>
+        <div class="actions">
+            @if (p.MapUrl is not null) { <a class="btn" href="@p.MapUrl" target="_blank" rel="noopener">@Icons.Svg("map", 20) افتح الخريطة</a> }
+            <button class="btn" type="button" data-share data-title="@p.Name">@Icons.Svg("share", 20) مشاركة</button>
+        </div>
+    </section>
+
+    @if (images.Count > 0)
+    {
+        <div class="gallery" tabindex="0" aria-label="صور المكان">
+            @foreach (var img in images) { <img src="@ImageStore.Url(img.FileName)" alt="صورة @p.Name" loading="lazy" decoding="async"> }
+        </div>
+        @if (images.Count > 1) { <div class="gallery-count">@images.Count صور — اسحب للتنقل</div> }
+    }
+
+    <section class="card pad stack">
+        <h2>مواعيد العمل</h2>
+        <div class="row">
+            @Icons.Svg("clock", 22)
+            <span>@(hours ?? "مش متسجلة")</span>
+            @if (state == OpenState.Open) { <span class="badge badge-owner">مفتوح دلوقتي</span> }
+            else if (state == OpenState.Closed) { <span class="badge badge-closed">مقفول دلوقتي</span> }
+        </div>
+        <div class="muted small">آخر تحديث للبيانات: @Fmt.Date(Clock.ToLocal(p.UpdatedAt))</div>
+    </section>
+
+    <details class="card pad" open="@(Model.ShowReport ? "open" : null)">
+        <summary style="cursor:pointer; font-weight:700; min-height:44px; display:flex; align-items:center; gap:8px">@Icons.Svg("flag", 20) بلّغ عن خطأ في البيانات</summary>
+        <form method="post" asp-page-handler="Report" class="stack" style="margin-top:12px">
+            <label class="field">إيه الغلط؟
+                <textarea class="input" name="message" maxlength="500" required placeholder="مثال: الرقم ده مش شغال، أو المحل نقل"></textarea>
+            </label>
+            <partial name="_Turnstile" />
+            <button class="btn btn-primary" type="submit">ابعت البلاغ</button>
+            <a class="small" href="/places/add?editOf=@p.Id">أو اقترح تعديل البيانات بنفسك</a>
+        </form>
+    </details>
+</div>
+
+<div class="contact-bar">
+    <a class="btn btn-call" href="@Phone.TelLink(p.Phone)">@Icons.Svg("phone", 20, 2.2) اتصل</a>
+    @if (wa is not null) { <a class="btn btn-wa" href="@wa" target="_blank" rel="noopener">@Icons.Svg("whatsapp", 20) واتساب</a> }
+</div>

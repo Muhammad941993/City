@@ -1,0 +1,14 @@
+@{
+    var current = ViewData["AdminNav"] as string;
+    string? Cur(string k) => current == k ? "true" : null;
+}
+<nav class="chips card" style="padding:8px" aria-label="لوحة التحكم">
+    <a class="chip" href="/admin" aria-current="@Cur("queue")">المراجعة</a>
+    <a class="chip" href="/admin/properties" aria-current="@Cur("properties")">العقارات</a>
+    <a class="chip" href="/admin/places" aria-current="@Cur("places")">المحلات والخدمات</a>
+    <a class="chip" href="/admin/taxonomy" aria-current="@Cur("taxonomy")">التصنيفات والمناطق</a>
+    <form method="post" action="/admin/login?handler=Logout" style="margin-inline-start:auto">
+        @Html.AntiForgeryToken()
+        <button class="chip" type="submit" style="border:0; font:inherit; cursor:pointer">@Icons.Svg("logout", 18) خروج</button>
+    </form>
+</nav>

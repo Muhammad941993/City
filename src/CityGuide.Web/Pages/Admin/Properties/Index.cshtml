@@ -1,0 +1,42 @@
+@page "/admin/properties"
+@model CityGuide.Web.Pages.Admin.Properties.IndexModel
+@inject CityClock Clock
+@{
+    ViewData["Title"] = "إدارة العقارات";
+    ViewData["AdminNav"] = "properties";
+}
+<div class="page">
+    <partial name="_AdminNav" />
+    <div class="row wrap-row">
+        <h1 style="flex:1 1 auto">العقارات</h1>
+        <a class="btn btn-primary" href="/admin/properties/edit">@Icons.Svg("plus", 20, 2.4) إضافة عقار</a>
+    </div>
+    <form method="get" class="card pad inline-form">
+        <input class="input" name="q" value="@Model.Q" placeholder="اسم المعلن، الرقم، المنطقة، رقم الإعلان" aria-label="بحث">
+        <select class="input" name="status" aria-label="الحالة">
+            <option value="">كل الحالات</option>
+            @foreach (var s in Enum.GetValues<ListingStatus>()) { <option value="@s" selected="@(Model.Status == s)">@s.Ar()</option> }
+        </select>
+        <button class="btn btn-sm" type="submit">بحث</button>
+    </form>
+    <div class="card table-wrap">
+        <table class="list">
+            <thead><tr><th>#</th><th>العقار</th><th>السعر</th><th>المعلن</th><th>الحالة</th><th>ينتهي</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var p in Model.Items)
+            {
+                <tr>
+                    <td>@p.Id</td>
+                    <td>@p.Title<div class="muted small">@p.Area?.Name</div></td>
+                    <td>@Fmt.Price(p)</td>
+                    <td>@p.AdvertiserName<div class="muted small">@p.AdvertiserType.Ar() · <span class="ltr">@Phone.Display(p.AdvertiserPhone)</span></div></td>
+                    <td>@p.Status.Ar()@(p.IsVerified ? " · موثّق" : "")@(p.IsFeatured ? " · مميز" : "")</td>
+                    <td>@(p.ExpiresAt is { } e ? Fmt.Date(Clock.ToLocal(e)) : "—")</td>
+                    <td><a class="btn btn-sm" href="/admin/properties/edit/@p.Id">إدارة</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        @if (Model.Items.Count == 0) { <div class="empty">مفيش نتائج.</div> }
+    </div>
+</div>

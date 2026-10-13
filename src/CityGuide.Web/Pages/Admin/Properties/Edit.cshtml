@@ -1,0 +1,83 @@
+@page "/admin/properties/edit/{id:int?}"
+@model CityGuide.Web.Pages.Admin.Properties.EditModel
+@inject CityClock Clock
+@{
+    var p = Model.Existing;
+    ViewData["Title"] = p is null ? "إضافة عقار" : $"عقار #{p.Id}";
+    ViewData["AdminNav"] = "properties";
+}
+<div class="page">
+    <partial name="_AdminNav" />
+    @if (Model.Flash is not null) { <div class="notice notice-ok" role="status">@Model.Flash</div> }
+
+    <div class="two-col">
+        <form method="post" enctype="multipart/form-data" class="card pad stack">
+            <h1>@ViewData["Title"]</h1>
+            <div asp-validation-summary="ModelOnly"></div>
+            <partial name="_PropertyFields" model="Model.Form" />
+            <partial name="_PropertyContactFields" model="Model.Form" />
+            <label class="field">إضافة صور
+                <input class="input" type="file" name="images" accept="image/*" multiple data-preview="admin-thumbs">
+                @foreach (var e in ViewData.ModelState["images"]?.Errors ?? []) { <span class="error">@e.ErrorMessage</span> }
+            </label>
+            <div class="thumbs" id="admin-thumbs"></div>
+            <div class="actions">
+                <button class="btn btn-primary" type="submit">حفظ</button>
+                @if (p is null || p.Status != ListingStatus.Published)
+                {
+                    <button class="btn" type="submit" name="publish" value="true">حفظ ونشر</button>
+                }
+            </div>
+        </form>
+
+        @if (p is not null)
+        {
+            <aside class="stack">
+                <section class="card pad stack">
+                    <div><b>الحالة:</b> @p.Status.Ar()</div>
+                    @if (p.RejectionReason is not null) { <div class="small muted">سبب الرفض: @p.RejectionReason</div> }
+                    @if (p.PublishedAt is { } pub) { <div class="small">نُشر: @Fmt.Date(Clock.ToLocal(pub))</div> }
+                    @if (p.ExpiresAt is { } exp) { <div class="small">ينتهي: @Fmt.Date(Clock.ToLocal(exp))</div> }
+                    @if (ListingRules.IsPubliclyVisible(p, Clock.UtcNow)) { <a class="small" href="/properties/@p.Id" target="_blank">شوف الإعلان على الموقع</a> }
+
+                    <form method="post" asp-page-handler="Approve" asp-route-id="@p.Id">
+                        <button class="btn btn-primary btn-block">@(p.Status == ListingStatus.Published ? "تجديد 30 يوم" : "موافقة ونشر")</button>
+                    </form>
+                    @if (p.Status == ListingStatus.Published)
+                    {
+                        <form method="post" asp-page-handler="Close" asp-route-id="@p.Id"><button class="btn btn-block">@p.Purpose.ClosedText()</button></form>
+                    }
+                    <form method="post" asp-page-handler="Reject" asp-route-id="@p.Id" class="inline-form">
+                        <input class="input" name="reason" placeholder="سبب الرفض" aria-label="سبب الرفض">
+                        <button class="btn btn-danger btn-sm">رفض</button>
+                    </form>
+                    <form method="post" asp-page-handler="Toggle" asp-route-id="@p.Id" class="actions">
+                        <button class="btn btn-sm" name="flag" value="verified">@(p.IsVerified ? "شيل علامة موثّق" : "علامة موثّق")</button>
+                        <button class="btn btn-sm" name="flag" value="featured">@(p.IsFeatured ? "شيل مميز" : "اجعله مميز")</button>
+                    </form>
+                </section>
+
+                @if (p.Images.Count > 0)
+                {
+                    <section class="card pad stack">
+                        <h2>الصور (@p.Images.Count)</h2>
+                        <div class="thumbs">
+                            @foreach (var img in p.Images.OrderBy(i => i.SortOrder))
+                            {
+                                <form method="post" asp-page-handler="DeleteImage" asp-route-id="@p.Id" class="stack" style="gap:4px">
+                                    <input type="hidden" name="imageId" value="@img.Id">
+                                    <img src="@ImageStore.ThumbUrl(img.FileName)" alt="">
+                                    <button class="btn btn-danger btn-sm" aria-label="حذف الصورة">حذف</button>
+                                </form>
+                            }
+                        </div>
+                    </section>
+                }
+
+                <form method="post" asp-page-handler="Delete" asp-route-id="@p.Id" onsubmit="return confirm('حذف الإعلان نهائياً؟')">
+                    <button class="btn btn-danger btn-block">حذف الإعلان نهائياً</button>
+                </form>
+            </aside>
+        }
+    </div>
+</div>

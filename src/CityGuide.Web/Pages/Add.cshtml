@@ -1,0 +1,19 @@
+@page "/add"
+@{
+    ViewData["Title"] = "أضف إعلانك";
+    ViewData["Nav"] = "add";
+}
+<div class="page narrow" style="margin:0 auto">
+    <h1>عايز تضيف إيه؟</h1>
+    <p class="muted">الإضافة مجانية ومن غير تسجيل. بنراجع كل إعلان قبل ما يظهر.</p>
+    <a class="card pad row" href="/properties/add" style="text-decoration:none; color:inherit">
+        <span class="cat-icon" style="background:var(--primary-soft); color:var(--primary)">@Icons.Svg("building", 30)</span>
+        <span style="flex:1 1 auto"><b style="font-size:19px">عقار للبيع أو الإيجار</b><br><span class="muted small">شقة، بيت، أرض، محل، مخزن</span></span>
+        @Icons.Svg("back", 20)
+    </a>
+    <a class="card pad row" href="/places/add" style="text-decoration:none; color:inherit">
+        <span class="cat-icon" style="background:var(--amber-soft); color:var(--amber-text)">@Icons.Svg("store", 30)</span>
+        <span style="flex:1 1 auto"><b style="font-size:19px">محل أو خدمة في الدليل</b><br><span class="muted small">صيدلية، دكتور، حرفي، مطعم…</span></span>
+        @Icons.Svg("back", 20)
+    </a>
+</div>

@@ -1,0 +1,19 @@
+@page "/admin/login"
+@model CityGuide.Web.Pages.Admin.LoginModel
+@{
+    ViewData["Title"] = "دخول المسؤول";
+}
+<div class="page narrow" style="margin:0 auto; max-width:440px">
+    <form method="post" class="card pad stack">
+        <h1>دخول المسؤول</h1>
+        @if (Model.Error is not null) { <div class="notice notice-err" role="alert">@Model.Error</div> }
+        <label class="field">الإيميل
+            <input class="input ltr" type="email" name="email" autocomplete="username" required value="@Model.Email">
+        </label>
+        <label class="field">كلمة السر
+            <input class="input ltr" type="password" name="password" autocomplete="current-password" required>
+        </label>
+        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl">
+        <button class="btn btn-primary btn-block" type="submit">دخول</button>
+    </form>
+</div>

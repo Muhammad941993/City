@@ -1,0 +1,54 @@
+@page "/properties/add"
+@model CityGuide.Web.Pages.Properties.AddModel
+@{
+    ViewData["Title"] = "أضف عقارك";
+    ViewData["Nav"] = "add";
+    ViewData["NoIndex"] = true;
+    var wa = Phone.WhatsAppLink(SiteOpt.Value.WhatsApp, "عايز أعلن عن عقار");
+}
+<div class="page narrow" style="margin:0 auto">
+    <div class="row">
+        <a class="icon-btn" href="/add" aria-label="إغلاق">@Icons.Svg("close", 22, 2.4)</a>
+        <h1>أضف عقارك</h1>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="card pad stack" data-steps>
+        <div class="stack" data-steps-progress hidden>
+            <div class="muted small" data-steps-label>الخطوة 1 من 3</div>
+            <div class="progress"><div></div></div>
+        </div>
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <section class="step stack" data-step="1" aria-label="بيانات العقار">
+            <partial name="_PropertyFields" model="Model.Form" />
+        </section>
+
+        <section class="step stack" data-step="2" aria-label="الصور">
+            <h2>صور العقار</h2>
+            <p class="muted small">من 1 لـ 10 صور. الصور الواضحة بتجيب اتصالات أكتر.</p>
+            <label class="btn btn-block" style="position:relative">
+                @Icons.Svg("camera", 22) صوّر العقار أو اختار صور
+                <input type="file" name="images" accept="image/*" multiple required data-preview="prop-thumbs" style="position:absolute; inset:0; opacity:0; cursor:pointer">
+            </label>
+            <span class="error">@Model.ImageError</span>
+            <div class="thumbs" id="prop-thumbs"></div>
+        </section>
+
+        <section class="step stack" data-step="3" aria-label="بيانات التواصل">
+            <partial name="_PropertyContactFields" model="Model.Form" />
+            <div class="notice">رقمك مش هيظهر للناس غير بعد ما نراجع إعلانك.</div>
+            <partial name="_Turnstile" />
+        </section>
+
+        <div class="actions" data-steps-nav>
+            <button class="btn" type="button" data-step-back hidden>رجوع</button>
+            <button class="btn btn-primary" type="button" data-step-next hidden>التالي</button>
+            <button class="btn btn-primary" type="submit" data-step-submit>ابعت الإعلان</button>
+        </div>
+    </form>
+
+    @if (wa is not null)
+    {
+        <p class="muted small" style="text-align:center">صعب عليك الفورم؟ <a href="@wa" target="_blank" rel="noopener">ابعتلنا البيانات والصور على واتساب</a></p>
+    }
+</div>

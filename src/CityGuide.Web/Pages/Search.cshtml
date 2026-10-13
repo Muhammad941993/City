@@ -1,0 +1,40 @@
+@page "/search"
+@model SearchModel
+@{
+    ViewData["Title"] = string.IsNullOrWhiteSpace(Model.Q) ? "بحث" : $"نتائج البحث عن {Model.Q}";
+    ViewData["NoIndex"] = true;
+}
+<div class="page">
+    <form method="get" role="search">
+        <label class="search-box search-lg">
+            @Icons.Svg("search", 22, 2.2)
+            <span class="sr-only">بحث</span>
+            <input type="search" name="q" value="@Model.Q" placeholder="دوّر على رقم، محل، أو عقار…" autofocus>
+            <button class="btn btn-primary btn-sm" type="submit">بحث</button>
+        </label>
+    </form>
+
+    @if (Model.Searched)
+    {
+        <section class="stack" aria-labelledby="dir-res">
+            <div class="section-title"><h2 id="dir-res">من الدليل (@Model.Places.Count)</h2></div>
+            @if (Model.Places.Count == 0) { <div class="card empty">مفيش أماكن بالاسم ده.</div> }
+            else
+            {
+                <div class="place-list">@foreach (var p in Model.Places) { <partial name="_PlaceCard" model="p" /> }</div>
+            }
+        </section>
+        <section class="stack" aria-labelledby="prop-res">
+            <div class="section-title"><h2 id="prop-res">من العقارات (@Model.Properties.Count)</h2></div>
+            @if (Model.Properties.Count == 0) { <div class="card empty">مفيش عقارات مطابقة.</div> }
+            else
+            {
+                <div class="prop-list">@foreach (var p in Model.Properties) { <partial name="_PropertyCard" model="p" /> }</div>
+            }
+        </section>
+    }
+    else
+    {
+        <p class="muted">اكتب اسم محل، خدمة (زي "صيدلية" أو "سباك")، أو منطقة.</p>
+    }
+</div>

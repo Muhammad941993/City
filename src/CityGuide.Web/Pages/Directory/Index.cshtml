@@ -1,0 +1,43 @@
+@page "/directory"
+@model CityGuide.Web.Pages.Directory.IndexModel
+@{
+    ViewData["Title"] = "أرقام وخدمات";
+    ViewData["Description"] = $"كل أرقام المحلات والخدمات في {SiteOpt.Value.CityName}: صيدليات، دكاترة، حرفيين، مطاعم، خدمات حكومية وطوارئ.";
+    ViewData["Nav"] = "directory";
+}
+<div class="page">
+    <h1>أرقام وخدمات</h1>
+    <form action="/search" method="get" role="search">
+        <label class="search-box search-lg">
+            @Icons.Svg("search", 22, 2.2)
+            <span class="sr-only">بحث</span>
+            <input type="search" name="q" placeholder="اسم المحل أو الخدمة…">
+        </label>
+    </form>
+    <div class="stack">
+        @foreach (var c in Model.Categories)
+        {
+            var tone = Icons.Tone(c.Icon);
+            <section class="card pad stack">
+                <a class="row" href="/directory/@c.Slug" style="text-decoration:none; color:inherit">
+                    <span class="cat-icon" style="background:@tone.Bg; color:@tone.Fg">@Icons.Svg(c.Icon, 28)</span>
+                    <span style="flex:1 1 auto">
+                        <span style="display:block; font-weight:700; font-size:19px">@c.Name</span>
+                        <span class="muted small">@(Model.Counts.GetValueOrDefault(c.Id)) مكان</span>
+                    </span>
+                    @Icons.Svg("back", 20)
+                </a>
+                @if (c.Children.Count > 0)
+                {
+                    <div class="chips">
+                        @foreach (var s in c.Children.OrderBy(s => s.SortOrder))
+                        {
+                            <a class="chip" href="/directory/@c.Slug?sub=@s.Id">@s.Name</a>
+                        }
+                    </div>
+                }
+            </section>
+        }
+    </div>
+    <a class="btn btn-primary" href="/places/add">@Icons.Svg("plus", 20, 2.4) عندك محل أو خدمة؟ أضفها مجاناً</a>
+</div>

@@ -1,0 +1,73 @@
+@page "/admin/places/edit/{id:int?}"
+@model CityGuide.Web.Pages.Admin.Places.EditModel
+@inject CityClock Clock
+@{
+    var p = Model.Existing;
+    ViewData["Title"] = p is null ? "إضافة مكان" : p.Name;
+    ViewData["AdminNav"] = "places";
+}
+<div class="page">
+    <partial name="_AdminNav" />
+    @if (Model.Flash is not null) { <div class="notice notice-ok" role="status">@Model.Flash</div> }
+    @if (p?.EditOfPlaceId is { } orig)
+    {
+        <div class="notice">ده اقتراح تعديل على <a href="/admin/places/edit/@orig">المكان الأصلي</a>. اعتماده هينقل البيانات دي للمكان الأصلي.</div>
+    }
+
+    <div class="two-col">
+        <form method="post" enctype="multipart/form-data" class="card pad stack">
+            <h1>@ViewData["Title"]</h1>
+            <div asp-validation-summary="ModelOnly"></div>
+            <partial name="_PlaceFields" model="Model.Form" />
+            <label class="field">إضافة صور
+                <input class="input" type="file" name="images" accept="image/*" multiple data-preview="admin-thumbs">
+                @foreach (var e in ViewData.ModelState["images"]?.Errors ?? []) { <span class="error">@e.ErrorMessage</span> }
+            </label>
+            <div class="thumbs" id="admin-thumbs"></div>
+            <button class="btn btn-primary" type="submit">حفظ</button>
+        </form>
+
+        @if (p is not null)
+        {
+            <aside class="stack">
+                <section class="card pad stack">
+                    <div><b>الحالة:</b> @p.Status.Ar()</div>
+                    @if (p.RejectionReason is not null) { <div class="small muted">سبب الرفض: @p.RejectionReason</div> }
+                    <div class="small">آخر تحديث: @Fmt.Date(Clock.ToLocal(p.UpdatedAt))</div>
+                    @if (p.Status == ListingStatus.Published && p.EditOfPlaceId is null) { <a class="small" href="/places/@p.Id" target="_blank">شوف الصفحة على الموقع</a> }
+                    @if (p.Status != ListingStatus.Published)
+                    {
+                        <form method="post" asp-page-handler="Approve" asp-route-id="@p.Id"><button class="btn btn-primary btn-block">@(p.EditOfPlaceId is null ? "موافقة ونشر" : "اعتماد التعديل")</button></form>
+                        <form method="post" asp-page-handler="Reject" asp-route-id="@p.Id" class="inline-form">
+                            <input class="input" name="reason" placeholder="سبب الرفض" aria-label="سبب الرفض">
+                            <button class="btn btn-danger btn-sm">رفض</button>
+                        </form>
+                    }
+                    @if (p.EditOfPlaceId is null)
+                    {
+                        <form method="post" asp-page-handler="ToggleVerified" asp-route-id="@p.Id"><button class="btn btn-block">@(p.IsVerified ? "شيل علامة موثّق" : "علامة موثّق")</button></form>
+                    }
+                </section>
+                @if (p.Images.Count > 0)
+                {
+                    <section class="card pad stack">
+                        <h2>الصور (@p.Images.Count)</h2>
+                        <div class="thumbs">
+                            @foreach (var img in p.Images.OrderBy(i => i.SortOrder))
+                            {
+                                <form method="post" asp-page-handler="DeleteImage" asp-route-id="@p.Id" class="stack" style="gap:4px">
+                                    <input type="hidden" name="imageId" value="@img.Id">
+                                    <img src="@ImageStore.ThumbUrl(img.FileName)" alt="">
+                                    <button class="btn btn-danger btn-sm" aria-label="حذف الصورة">حذف</button>
+                                </form>
+                            }
+                        </div>
+                    </section>
+                }
+                <form method="post" asp-page-handler="Delete" asp-route-id="@p.Id" onsubmit="return confirm('حذف المكان نهائياً؟')">
+                    <button class="btn btn-danger btn-block">حذف نهائياً</button>
+                </form>
+            </aside>
+        }
+    </div>
+</div>

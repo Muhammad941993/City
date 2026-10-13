@@ -1,0 +1,29 @@
+@page "/places/add"
+@model CityGuide.Web.Pages.Places.AddModel
+@{
+    ViewData["Title"] = Model.EditOf is null ? "أضف محل أو خدمة" : "اقترح تعديل";
+    ViewData["Nav"] = "add";
+    ViewData["NoIndex"] = true;
+}
+<div class="page narrow" style="margin:0 auto">
+    <div class="row">
+        <a class="icon-btn" href="@(Model.EditOf is null ? "/add" : $"/places/{Model.EditOf}")" aria-label="رجوع">@Icons.Svg("back", 22, 2.4)</a>
+        <h1>@ViewData["Title"]</h1>
+    </div>
+    <p class="muted">@(Model.EditOf is null
+        ? "الإضافة مجانية. هنراجع البيانات ونتواصل معاك قبل ما تظهر على الموقع."
+        : "عدّل البيانات اللي محتاجة تصحيح، وهنراجعها قبل ما تتغير على الموقع.")</p>
+
+    <form method="post" enctype="multipart/form-data" class="card pad stack">
+        <div asp-validation-summary="ModelOnly"></div>
+        <input type="hidden" asp-for="EditOf">
+        <partial name="_PlaceFields" model="Model.Form" />
+        <label class="field">صور <span class="hint">(اختياري — لحد 5 صور)</span>
+            <input class="input" type="file" name="images" accept="image/*" multiple data-preview="place-thumbs">
+            <span class="error">@Model.ImageError</span>
+        </label>
+        <div class="thumbs" id="place-thumbs"></div>
+        <partial name="_Turnstile" />
+        <button class="btn btn-primary btn-block" type="submit">ابعت للمراجعة</button>
+    </form>
+</div>

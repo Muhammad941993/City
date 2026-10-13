@@ -1,0 +1,14 @@
+@page "/submitted"
+@{
+    ViewData["Title"] = "وصلنا إعلانك";
+    ViewData["NoIndex"] = true;
+    var isPlace = Request.Query["kind"] == "place";
+}
+<div class="page narrow" style="margin:0 auto">
+    <section class="card pad stack" style="text-align:center; align-items:center; padding:32px 16px">
+        <span class="cat-icon" style="width:72px; height:72px; border-radius:50%; background:var(--green-soft); color:var(--green)">@Icons.Svg("check", 40, 3)</span>
+        <h1>@(isPlace ? "وصلتنا البيانات" : "وصلنا إعلانك")</h1>
+        <p>إعلانك قيد المراجعة وهنتواصل معاك على واتساب في أقرب وقت، وبعدها بيظهر على الموقع.</p>
+        <a class="btn btn-primary" href="/">رجوع للرئيسية</a>
+    </section>
+</div>

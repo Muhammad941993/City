@@ -1,0 +1,64 @@
+@page "/directory/{slug}"
+@model CityGuide.Web.Pages.Directory.CategoryModel
+@{
+    var c = Model.Category!;
+    var subName = Model.Sub is { } sid ? c.Children.FirstOrDefault(s => s.Id == sid)?.Name : null;
+    ViewData["Title"] = subName is null ? c.Name : $"{subName} — {c.Name}";
+    ViewData["Description"] = $"أرقام {subName ?? c.Name} في {SiteOpt.Value.CityName} مع زر اتصال وواتساب ومواعيد العمل.";
+    ViewData["Nav"] = "directory";
+    string Link(int? sub, int? area)
+    {
+        var q = new List<string>();
+        if (sub is not null) q.Add($"sub={sub}");
+        if (area is not null) q.Add($"area={area}");
+        return $"/directory/{c.Slug}" + (q.Count > 0 ? "?" + string.Join("&", q) : "");
+    }
+}
+<div class="page">
+    <div class="row">
+        <a class="icon-btn" href="/directory" aria-label="رجوع لكل التصنيفات">@Icons.Svg("back", 22, 2.4)</a>
+        <h1>@c.Name</h1>
+    </div>
+
+    <section class="card pad stack">
+        @if (c.Children.Count > 0)
+        {
+            <nav class="chips" aria-label="التصنيفات الفرعية">
+                <a class="chip" href="@Link(null, Model.Area)" aria-current="@(Model.Sub is null ? "true" : null)">الكل</a>
+                @foreach (var s in c.Children.OrderBy(s => s.SortOrder))
+                {
+                    <a class="chip" href="@Link(s.Id, Model.Area)" aria-current="@(Model.Sub == s.Id ? "true" : null)">@s.Name</a>
+                }
+            </nav>
+        }
+        <form method="get" class="inline-form">
+            @if (Model.Sub is not null) { <input type="hidden" name="sub" value="@Model.Sub"> }
+            <label class="sr-only" for="area">المنطقة</label>
+            <select id="area" name="area" class="input input-round" onchange="this.form.submit()">
+                <option value="">كل المناطق</option>
+                @foreach (var a in Model.Areas)
+                {
+                    <option value="@a.Id" selected="@(Model.Area == a.Id)">@a.Name</option>
+                }
+            </select>
+            <noscript><button class="btn btn-sm" type="submit">عرض</button></noscript>
+        </form>
+    </section>
+
+    @if (Model.Places.Count == 0)
+    {
+        <div class="card empty">
+            مفيش أماكن هنا لسه.<br>
+            <a href="/places/add">تعرف مكان؟ أضفه</a>
+        </div>
+    }
+    else
+    {
+        <div class="place-list">
+            @foreach (var p in Model.Places)
+            {
+                <partial name="_PlaceCard" model="p" />
+            }
+        </div>
+    }
+</div>
